@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Social Media Auto Poster</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container py-5">
+  <div class="card shadow-lg p-4">
+    <h3 class="mb-4 text-center text-primary"><i class="fas fa-bullhorn"></i> Social Media Post Automation Tool</h3>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-info">{{ messages[0] }}</div>
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/post" enctype="multipart/form-data" id="postForm">
+      <input type="hidden" name="action" id="actionType" value="post_now">
+      <input type="hidden" name="scheduled_time" id="scheduledTime">
+
+      <!-- Media Upload + Preview Button (Same line) -->
+      <div class="mb-3 d-flex gap-2 align-items-center">
+        <label for="media" class="form-label me-2 mb-0">Upload Media:</label>
+        <input type="file" class="form-control" id="media" name="media" multiple required style="max-width: 350px;">
+        <button type="button" class="btn btn-info" id="previewButton" style="display: none;" data-bs-toggle="modal" data-bs-target="#mediaPreviewModal">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+
+      <!-- Platform Sections -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="border rounded p-3 bg-light">
+            <h5 class="text-secondary">Post to Facebook / Instagram / LinkedIn</h5>
+            <div class="row mb-2">
+              <div class="col">
+                <input class="form-check-input" type="checkbox" name="platforms" value="facebook" id="facebook">
+                <label class="form-check-label" for="facebook">Facebook</label>
+              </div>
+              <div class="col">
+                <input class="form-check-input" type="checkbox" name="platforms" value="instagram" id="instagram">
+                <label class="form-check-label" for="instagram">Instagram</label>
+              </div>
+              <div class="col">
+                <input class="form-check-input" type="checkbox" name="platforms" value="linkedin" id="linkedin">
+                <label class="form-check-label" for="linkedin">LinkedIn</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="caption_general" class="form-label">Caption for FB/IG/LinkedIn</label>
+              <textarea class="form-control" id="caption_general" name="caption_general" rows="5" required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="border rounded p-3 bg-light">
+            <h5 class="text-secondary">Post to X (Twitter)</h5>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" name="platforms" value="x" id="x">
+              <label class="form-check-label" for="x">X (Twitter)</label>
+            </div>
+            <div>
+              <label for="caption_twitter" class="form-label">Caption for Twitter</label>
+              <textarea class="form-control" id="caption_twitter" name="caption_twitter" maxlength="280" rows="5" required></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Location -->
+      <div class="mb-3 mt-4">
+        <label for="location" class="form-label">Add Location</label>
+        <input type="text" class="form-control" id="location" name="location" placeholder="e.g. Capermint Technologies, Ahmedabad">
+      </div>
+
+      <!-- Collaborators -->
+      <div class="mb-3">
+        <label for="collaborators" class="form-label">Add Collaborators</label>
+        <input type="text" class="form-control" id="collaborators" name="collaborators" placeholder="e.g. @username1, @username2">
+      </div>
+
+      <!-- Buttons -->
+      <div class="text-center mt-4 d-flex justify-content-center gap-3">
+        <button type="submit" class="btn btn-success px-4" onclick="setAction('post_now')">
+          <i class="fas fa-paper-plane"></i> Post Now
+        </button>
+        <button type="button" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+          <i class="fas fa-clock"></i> Schedule Post
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Schedule Modal -->
+<div class="modal fade" id="scheduleModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">Schedule Post</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label for="schedule_datetime" class="form-label">Select Date and Time</label>
+        <input type="datetime-local" class="form-control" id="schedule_datetime">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="submitScheduled()">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Media Preview Modal -->
+<div class="modal fade" id="mediaPreviewModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Media Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex flex-wrap gap-3 justify-content-center" id="modalMediaContainer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const mediaInput = document.getElementById('media');
+  const modalMediaContainer = document.getElementById('modalMediaContainer');
+  const previewButton = document.getElementById('previewButton');
+
+  mediaInput.addEventListener('change', function () {
+    modalMediaContainer.innerHTML = '';
+    previewButton.style.display = this.files.length > 0 ? 'inline-block' : 'none';
+
+    Array.from(this.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const fileType = file.type;
+        let mediaEl;
+
+        if (fileType.startsWith('image')) {
+          mediaEl = document.createElement('img');
+          mediaEl.src = e.target.result;
+          mediaEl.classList.add('modal-media-image');
+        } else if (fileType.startsWith('video')) {
+          mediaEl = document.createElement('video');
+          mediaEl.src = e.target.result;
+          mediaEl.controls = true;
+          mediaEl.classList.add('modal-media-video');
+        }
+
+        modalMediaContainer.appendChild(mediaEl);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  function setAction(type) {
+    document.getElementById('actionType').value = type;
+  }
+
+  function submitScheduled() {
+    const datetime = document.getElementById('schedule_datetime').value;
+    if (!datetime) return alert("Please select a date and time!");
+    document.getElementById('scheduledTime').value = datetime;
+    setAction('schedule');
+    document.getElementById('postForm').submit();
+  }
+</script>
+</body>
+</html>
