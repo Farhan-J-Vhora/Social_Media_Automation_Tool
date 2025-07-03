@@ -1,58 +1,58 @@
 import requests
 import os
+import mimetypes
+import logging
 
 FB_PAGE_ID = "737124382808926"
-FB_ACCESS_TOKEN = "EAAPCBbiv63YBO..."
+FB_ACCESS_TOKEN = "EAASRhUoV8BcBOZBx9PxlVa5MmOqJpzC8KhnxnZB1CIPZBfa9K1m0J4Mnrap12fqT0ZAcXzd7YayOZAMLKG5ZC5aEXl601kikVYpKFwOvb3lIl8B5uMHyaLAk6mSGFmJEZA6pak4OTVPTLDZCctzbNDqmKdtUjZCjTKZC6xWLExz11ArRLcbLyVEKPEby3FWLeSCweZCZBOMdtvd4"
 
-def is_video(filename):
-    return filename.lower().endswith(('mp4', 'mov', 'avi'))
+def is_video(path):
+    return mimetypes.guess_type(path)[0].startswith('video')
 
-def is_image(filename):
-    return filename.lower().endswith(('png', 'jpg', 'jpeg'))
-
-def post_single_image(path, caption):
-    url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/photos"
-    with open(path, 'rb') as f:
-        files = {'source': f}
-        data = {'caption': caption, 'access_token': FB_ACCESS_TOKEN}
-        return requests.post(url, files=files, data=data).json()
-
-def post_single_video(path, caption):
-    url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/videos"
-    with open(path, 'rb') as f:
-        files = {'source': f}
-        data = {'description': caption, 'access_token': FB_ACCESS_TOKEN}
-        return requests.post(url, files=files, data=data).json()
-
-def post_multiple_images(paths, caption):
-    media_ids = []
-    for path in paths:
-        url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/photos"
-        with open(path, 'rb') as f:
-            files = {'source': f}
-            data = {'published': 'false', 'access_token': FB_ACCESS_TOKEN}
-            res = requests.post(url, files=files, data=data).json()
-            if 'id' in res:
-                media_ids.append({'media_fbid': res['id']})
-    post_url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/feed"
-    return requests.post(post_url, json={
-        'message': caption,
-        'attached_media': media_ids,
-        'access_token': FB_ACCESS_TOKEN
-    }).json()
+def is_image(path):
+    return mimetypes.guess_type(path)[0].startswith('image')
 
 def post_to_facebook(media_paths, caption):
-    images = [p for p in media_paths if is_image(p)]
-    videos = [p for p in media_paths if is_video(p)]
-    results = []
+    image_ids = []
+    for path in media_paths:
+        try:
+            if is_image(path):
+                logging.info(f"[📤] Uploading image to Facebook: {path}")
+                with open(path, 'rb') as f:
+                    res = requests.post(
+                        f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/photos",
+                        files={'source': f},
+                        data={'published': 'false', 'access_token': FB_ACCESS_TOKEN}
+                    ).json()
+                    logging.info(f"[✅] Upload response: {res}")
+                    if 'id' in res:
+                        image_ids.append({'media_fbid': res['id']})
 
-    if len(images) > 1:
-        results.append(post_multiple_images(images, caption))
-    else:
-        for img in images:
-            results.append(post_single_image(img, caption))
+            elif is_video(path):
+                logging.info(f"[📤] Uploading video to Facebook: {path}")
+                with open(path, 'rb') as f:
+                    res = requests.post(
+                        f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/videos",
+                        files={'source': f},
+                        data={'published': 'false', 'access_token': FB_ACCESS_TOKEN}
+                    ).json()
+                    logging.info(f"[✅] Upload response: {res}")
+                    if 'id' in res:
+                        image_ids.append({'media_fbid': res['id']})
+                    else:
+                        logging.error(f"[❌] Failed to upload media: {path}")
+        except Exception as e:
+            logging.error(f"[❌] Error uploading to Facebook: {e}")
 
-    for vid in videos:
-        results.append(post_single_video(vid, caption))
+    if image_ids:
+        logging.info(f"[📎] Attaching media to a post: {image_ids}")
+        post_url = f"https://graph.facebook.com/v19.0/{FB_PAGE_ID}/feed"
+        post_res = requests.post(post_url, json={
+            'message': caption,
+            'attached_media': image_ids,
+            'access_token': FB_ACCESS_TOKEN
+        }).json()
+        logging.info(f"[✅] Final post response: {post_res}")
+        return post_res
 
-    return results
+    return {"error": "Failed to create Facebook post"}
