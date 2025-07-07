@@ -1,0 +1,59 @@
+<!-- scheduled_posts.html -->
+<!-- This file is rendered by app.py's /scheduled-posts endpoint and its content is fetched by index.html -->
+
+<table class="table table-striped table-hover">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Platforms</th>
+      <th>Caption</th>
+      <th>Scheduled Time</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="scheduledPostsTableBody">
+    {% if posts %}
+      {% for post in posts %}
+        <tr>
+          <td>{{ post.id }}</td>
+          <td>
+            {% for platform in post.platforms %}
+              <span class="badge bg-primary me-1">{{ platform.capitalize() }}</span>
+            {% endfor %}
+          </td>
+          <td>{{ post.caption }}</td>
+          <td>{{ post.scheduled_time }}</td>
+          <td>
+            {% if post.status == 'pending' %}
+              <span class="status-badge status-pending">Pending</span>
+            {% elif post.status == 'completed' %}
+              <span class="status-badge status-completed">Completed</span>
+            {% elif post.status == 'failed' %}
+              <span class="status-badge status-failed">Failed</span>
+            {% elif post.status == 'processing' %}
+              <span class="status-badge status-processing">Processing</span>
+            {% else %}
+              <span class="status-badge bg-secondary">{{ post.status.capitalize() }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if post.status == 'pending' %}
+              <button class="btn btn-delete-post" data-post-id="{{ post.id }}">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            {% else %}
+              <button class="btn btn-delete-post" data-post-id="{{ post.id }}" disabled>
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td colspan="6" class="text-center py-4">No scheduled posts found.</td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>

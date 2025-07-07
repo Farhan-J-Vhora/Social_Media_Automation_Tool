@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Media Automation - PostFlow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #ffffff;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header Section */
+    .header-section {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      border-bottom: 1px solid #333;
+      padding: 60px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23333" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+
+    .brand-logo {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
+    }
+
+    .brand-logo i {
+      font-size: 28px;
+      color: #0a0a0a;
+    }
+
+    .header-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-subtitle {
+      font-size: 1.25rem;
+      color: #999;
+      font-weight: 400;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 60px 0;
+    }
+
+    .content-card {
+      background: rgba(26, 26, 26, 0.8);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Alert Styling */
+    .alert-custom {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      color: #fff;
+      backdrop-filter: blur(10px);
+    }
+
+    .alert-custom.alert-warning {
+      background: rgba(255, 193, 7, 0.1);
+      border-color: rgba(255, 193, 7, 0.3);
+    }
+
+    .alert-custom.alert-info {
+      background: rgba(13, 202, 240, 0.1);
+      border-color: rgba(13, 202, 240, 0.3);
+    }
+
+    /* Upload Section */
+    .upload-zone {
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 40px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-zone:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+    .upload-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .upload-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      transition: all 0.3s ease;
+    }
+
+    .upload-zone:hover .upload-icon {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+    }
+
+    .upload-icon i {
+      font-size: 32px;
+      color: #fff;
+    }
+
+    .form-control {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: #fff;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .form-control::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .form-label {
+      color: #fff;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-label i {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Platform Cards */
+    .platform-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 32px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .platform-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
+    }
+
+    .platform-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .platform-card:hover::before {
+      transform: translateX(100%);
+    }
+
+    .platform-card.active {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .platform-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .platform-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .custom-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .custom-checkbox:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .custom-checkbox input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #fff;
+      border-radius: 4px;
+    }
+
+    .custom-checkbox label {
+      margin: 0;
+      color: #fff;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .custom-checkbox.checked {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Buttons */
+    .btn-modern {
+      background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+      color: #0a0a0a;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 32px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-modern::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn-modern:hover::before {
+      left: 100%;
+    }
+
+    .btn-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.2);
+      color: #0a0a0a;
+    }
+
+    .btn-outline-modern {
+      background: transparent;
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 14px 30px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-outline-modern:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      transition: all 0.3s ease;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #fff;
+      transform: scale(1.1);
+    }
+
+    /* Character Counter */
+    .character-counter {
+      text-align: right;
+      margin-top: 8px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .character-counter.warning {
+      color: #ffc107;
+    }
+
+    .character-counter.danger {
+      color: #dc3545;
+    }
+
+    /* Additional Options */
+    .additional-options {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 32px;
+      margin-top: 32px;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+      background: rgba(26, 26, 26, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      color: #fff;
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px 24px 0 0;
+    }
+
+    .modal-title {
+      color: #fff;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-close {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      opacity: 1;
+      filter: brightness(0) invert(1);
+    }
+
+    .btn-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Media Preview */
+    .media-preview {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      margin: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .media-preview:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .header-title {
+        font-size: 2.5rem;
+      }
+
+      .content-card {
+        padding: 24px;
+      }
+
+      .platform-checkboxes {
+        flex-direction: column;
+      }
+
+      .upload-zone {
+        padding: 24px;
+      }
+
+      .upload-icon {
+        width: 60px;
+        height: 60px;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .content-card {
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    /* Social Media Platform Icons */
+    .fab.fa-facebook-f {
+      color: #1877f2;
+    }
+
+    .fab.fa-instagram {
+      color: #e1306c;
+    }
+
+    .fab.fa-linkedin {
+      color: #0077b5;
+    }
+
+    .fab.fa-x-twitter {
+      color: #1da1f2;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header-section">
+    <div class="main-container">
+      <div class="header-content">
+        <div class="brand-logo">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <h1 class="header-title">PostFlow</h1>
+        <p class="header-subtitle">Streamline your social media workflow with intelligent automation</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="main-container">
+      <div class="content-card">
+        <div id="alert" class="alert-custom d-none">
+          <i class="fas fa-info-circle me-2"></i>
+          <span id="alertText"></span>
+        </div>
+
+        <form method="POST" action="/post" enctype="multipart/form-data" id="postForm">
+          <input type="hidden" name="action" id="actionType" value="post_now">
+          <input type="hidden" name="scheduled_time" id="scheduledTime">
+
+          <!-- Media Upload Section -->
+          <div class="upload-zone">
+            <div class="upload-content">
+              <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+              </div>
+              <h5 class="mb-3">Upload Media Files</h5>
+              <p class="text-muted mb-4">Drag and drop files here or click to browse</p>
+              <div class="d-flex align-items-center justify-content-center gap-3">
+                <input type="file" class="form-control" name="media" multiple required style="max-width: 300px;">
+                <button type="button" class="btn btn-icon d-none" id="previewBtn" data-bs-toggle="modal" data-bs-target="#previewModal">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Platform Selection -->
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="platform-card">
+                <h5 class="platform-title">
+                  <i class="fas fa-share-alt"></i>
+                  General Platforms
+                </h5>
+                <div class="platform-checkboxes">
+                  <div class="custom-checkbox">
+                    <input type="checkbox" name="platforms" value="facebook" id="facebook">
+                    <label for="facebook">
+                      <i class="fab fa-facebook-f"></i>
+                      Facebook
+                    </label>
+                  </div>
+                  <div class="custom-checkbox">
+                    <input type="checkbox" name="platforms" value="instagram" id="instagram">
+                    <label for="instagram">
+                      <i class="fab fa-instagram"></i>
+                      Instagram
+                    </label>
+                  </div>
+                  <div class="custom-checkbox">
+                    <input type="checkbox" name="platforms" value="linkedin" id="linkedin">
+                    <label for="linkedin">
+                      <i class="fab fa-linkedin"></i>
+                      LinkedIn
+                    </label>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">
+                    <i class="fas fa-edit"></i>
+                    Caption
+                  </label>
+                  <textarea class="form-control" name="caption_general" rows="4" placeholder="Write your caption for Facebook, Instagram, and LinkedIn..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-6">
+              <div class="platform-card">
+                <h5 class="platform-title">
+                  <i class="fab fa-x-twitter"></i>
+                  Twitter / X
+                </h5>
+                <div class="platform-checkboxes">
+                  <div class="custom-checkbox">
+                    <input type="checkbox" name="platforms" value="x" id="x">
+                    <label for="x">
+                      <i class="fab fa-x-twitter"></i>
+                      X (Twitter)
+                    </label>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">
+                    <i class="fas fa-edit"></i>
+                    Tweet Content
+                  </label>
+                  <textarea class="form-control" name="caption_twitter" id="twitterCaption" maxlength="280" rows="4" placeholder="What's happening? (280 characters max)"></textarea>
+                  <div class="character-counter">
+                    <span id="charCount">0</span>/280
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Options -->
+          <div class="additional-options">
+            <h5 class="platform-title">
+              <i class="fas fa-sliders-h"></i>
+              Additional Options
+            </h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">
+                  <i class="fas fa-map-marker-alt"></i>
+                  Location
+                </label>
+                <input type="text" class="form-control" name="location" placeholder="Add location (optional)">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">
+                  <i class="fas fa-users"></i>
+                  Collaborators
+                </label>
+                <input type="text" class="form-control" name="collaborators" placeholder="@username1, @username2">
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="text-center mt-5">
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+              <button type="submit" class="btn btn-modern" onclick="setAction('post_now')">
+                <i class="fas fa-paper-plane"></i>
+                Post Now
+              </button>
+              <button type="button" class="btn btn-outline-modern" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                <i class="fas fa-clock"></i>
+                Schedule Post
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Modal -->
+  <div class="modal fade" id="scheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-calendar-alt"></i>
+            Schedule Post
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">
+            <i class="fas fa-clock"></i>
+            Select Date & Time
+          </label>
+          <input type="datetime-local" class="form-control" id="scheduleDateTime">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-modern" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-modern" onclick="submitScheduled()">
+            <i class="fas fa-check"></i>
+            Schedule
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-eye"></i>
+            Media Preview
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div id="previewContent" class="d-flex flex-wrap gap-3 justify-content-center"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // DOM Elements
+    const mediaInput = document.querySelector('input[name="media"]');
+    const previewBtn = document.getElementById('previewBtn');
+    const previewContent = document.getElementById('previewContent');
+    const twitterCaption = document.getElementById('twitterCaption');
+    const charCount = document.getElementById('charCount');
+    const alert = document.getElementById('alert');
+    const alertText = document.getElementById('alertText');
+
+    // Media preview functionality
+    mediaInput.addEventListener('change', function() {
+      previewContent.innerHTML = '';
+      previewBtn.classList.toggle('d-none', this.files.length === 0);
+
+      Array.from(this.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const element = file.type.startsWith('image') ?
+            `<img src="${e.target.result}" class="media-preview" alt="Preview">` :
+            `<video src="${e.target.result}" controls class="media-preview"></video>`;
+          previewContent.innerHTML += element;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // Twitter character counter
+    twitterCaption.addEventListener('input', function() {
+      const count = this.value.length;
+      charCount.textContent = count;
+      
+      const counter = document.querySelector('.character-counter');
+      counter.className = 'character-counter';
+      
+      if (count > 250) {
+        counter.classList.add('danger');
+      } else if (count > 200) {
+        counter.classList.add('warning');
+      }
+    });
+
+    // Platform selection visual feedback
+    document.querySelectorAll('input[name="platforms"]').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const customCheckbox = this.closest('.custom-checkbox');
+        const platformCard = this.closest('.platform-card');
+        
+        if (this.checked) {
+          customCheckbox.classList.add('checked');
+          platformCard.classList.add('active');
+        } else {
+          customCheckbox.classList.remove('checked');
+          
+          // Check if any other checkboxes in this card are checked
+          const otherChecked = platformCard.querySelectorAll('input[name="platforms"]:checked');
+          if (otherChecked.length === 0) {
+            platformCard.classList.remove('active');
+          }
+        }
+      });
+    });
+
+    // Form submission functions
+    function setAction(type) {
+      document.getElementById('actionType').value = type;
+    }
+
+    function submitScheduled() {
+      const datetime = document.getElementById('scheduleDateTime').value;
+      if (!datetime) {
+        showAlert('Please select a date and time for scheduling!', 'warning');
+        return;
+      }
+      if (new Date(datetime) <= new Date()) {
+        showAlert('Please select a future date and time!', 'warning');
+        return;
+      }
+      document.getElementById('scheduledTime').value = datetime;
+      setAction('schedule');
+      bootstrap.Modal.getInstance(document.getElementById('scheduleModal')).hide();
+      document.getElementById('postForm').submit();
+    }
+
+    function showAlert(message, type = 'info') {
+      alertText.textContent = message;
+      alert.className = `alert-custom alert-${type}`;
+      alert.classList.remove('d-none');
+      setTimeout(() => alert.classList.add('d-none'), 5000);
+    }
+
+    // Form validation
+    document.getElementById('postForm').addEventListener('submit', function(e) {
+      const platforms = document.querySelectorAll('input[name="platforms"]:checked');
+      const generalCaption = document.querySelector('textarea[name="caption_general"]').value.trim();
+      const twitterCaptionValue = twitterCaption.value.trim();
+      const isTwitterSelected = document.getElementById('x').checked;
+
+      if (platforms.length === 0) {
+        e.preventDefault();
+        showAlert('Please select at least one platform!', 'warning');
+        return;
+      }
+
+      const hasGeneralPlatforms = Array.from(platforms).some(p =>
+        ['facebook', 'instagram', 'linkedin'].includes(p.value)
+      );
+
+      if (hasGeneralPlatforms && !generalCaption) {
+        e.preventDefault();
+        showAlert('Please provide a caption for the selected platforms!', 'warning');
+        return;
+      }
+
+      if (isTwitterSelected && !twitterCaptionValue) {
+        e.preventDefault();
+        showAlert('Please provide content for your tweet!', 'warning');
+        return;
+      }
+
+      showAlert('Processing your post...', 'info');
+    });
+
+    // Initialize datetime picker
+    document.addEventListener('DOMContentLoaded', function() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('scheduleDateTime').min = now.toISOString().slice(0, 16);
+    });
+
+    // Upload zone drag and drop functionality
+    const uploadZone = document.querySelector('.upload-zone');
+    
+    uploadZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+      this.style.background = 'rgba(255, 255, 255, 0.08)';
+    });
+
+    uploadZone.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      this.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+      this.style.background = 'rgba(255, 255, 255, 0.02)';
+    });
+
+    uploadZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+      this.style.background = 'rgba(255, 255, 255, 0.02)';
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        mediaInput.files = files;
+        mediaInput.dispatchEvent(new Event('change'));
+      }
+    });
+
+    // Click to upload functionality
+    uploadZone.addEventListener('click', function(e) {
+      if (e.target === this || e.target.closest('.upload-content')) {
+        mediaInput.click();
+      }
+    });
+
+    // Smooth scrolling for better UX
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // Auto-resize textareas
+    function autoResize(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    document.querySelectorAll('textarea').forEach(textarea => {
+      textarea.addEventListener('input', function() {
+        autoResize(this);
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      // Ctrl/Cmd + Enter to post
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('postForm').dispatchEvent(new Event('submit'));
+      }
+      
+      // Ctrl/Cmd + Shift + S to schedule
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        new bootstrap.Modal(document.getElementById('scheduleModal')).show();
+      }
+    });
+
+    // Platform-specific character limits and validation
+    const platformLimits = {
+      facebook: 63206,
+      instagram: 2200,
+      linkedin: 1300,
+      x: 280
+    };
+
+    function validatePlatformContent() {
+      const selectedPlatforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked'))
+        .map(cb => cb.value);
+      
+      const generalCaption = document.querySelector('textarea[name="caption_general"]').value;
+      const twitterCaption = document.querySelector('textarea[name="caption_twitter"]').value;
+      
+      let warnings = [];
+      
+      selectedPlatforms.forEach(platform => {
+        if (platform === 'x' && twitterCaption.length > platformLimits.x) {
+          warnings.push(`Twitter content exceeds ${platformLimits.x} characters`);
+        } else if (['facebook', 'instagram', 'linkedin'].includes(platform)) {
+          if (generalCaption.length > platformLimits[platform]) {
+            warnings.push(`${platform.charAt(0).toUpperCase() + platform.slice(1)} content exceeds ${platformLimits[platform]} characters`);
+          }
+        }
+      });
+      
+      return warnings;
+    }
+
+    // Real-time validation feedback
+    document.querySelectorAll('textarea').forEach(textarea => {
+      textarea.addEventListener('input', function() {
+        const warnings = validatePlatformContent();
+        if (warnings.length > 0) {
+          // Visual feedback could be added here
+          console.warn('Content warnings:', warnings);
+        }
+      });
+    });
+
+    // Enhanced file validation
+    mediaInput.addEventListener('change', function() {
+      const files = Array.from(this.files);
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/mov', 'video/avi'];
+      
+      let validFiles = [];
+      let errors = [];
+      
+      files.forEach(file => {
+        if (file.size > maxSize) {
+          errors.push(`${file.name} is too large (max 50MB)`);
+        } else if (!allowedTypes.includes(file.type)) {
+          errors.push(`${file.name} is not a supported file type`);
+        } else {
+          validFiles.push(file);
+        }
+      });
+      
+      if (errors.length > 0) {
+        showAlert(`File errors: ${errors.join(', ')}`, 'warning');
+      }
+      
+      if (validFiles.length !== files.length) {
+        // Create new FileList with only valid files
+        const dt = new DataTransfer();
+        validFiles.forEach(file => dt.items.add(file));
+        this.files = dt.files;
+      }
+    });
+
+    // Save draft functionality
+    function saveDraft() {
+      const draftData = {
+        generalCaption: document.querySelector('textarea[name="caption_general"]').value,
+        twitterCaption: document.querySelector('textarea[name="caption_twitter"]').value,
+        location: document.querySelector('input[name="location"]').value,
+        collaborators: document.querySelector('input[name="collaborators"]').value,
+        platforms: Array.from(document.querySelectorAll('input[name="platforms"]:checked')).map(cb => cb.value),
+        timestamp: new Date().toISOString()
+      };
+      
+      // Since we can't use localStorage in Claude artifacts, we'll just show a message
+      showAlert('Draft saved locally!', 'info');
+      console.log('Draft data:', draftData);
+    }
+
+    // Auto-save draft every 30 seconds
+    setInterval(saveDraft, 30000);
+
+    // Enhanced modal interactions
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('shown.bs.modal', function() {
+        const firstInput = this.querySelector('input, textarea');
+        if (firstInput) {
+          firstInput.focus();
+        }
+      });
+    });
+
+    // Accessibility improvements
+    document.addEventListener('keydown', function(e) {
+      // ESC to close modals
+      if (e.key === 'Escape') {
+        const openModal = document.querySelector('.modal.show');
+        if (openModal) {
+          bootstrap.Modal.getInstance(openModal).hide();
+        }
+      }
+    });
+
+    // Loading states for better UX
+    function showLoading(button) {
+      const originalContent = button.innerHTML;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+      button.disabled = true;
+      
+      return function() {
+        button.innerHTML = originalContent;
+        button.disabled = false;
+      };
+    }
+
+    // Enhanced form submission with loading states
+    document.getElementById('postForm').addEventListener('submit', function(e) {
+      const submitBtn = e.submitter;
+      if (submitBtn) {
+        const resetLoading = showLoading(submitBtn);
+        
+        // Reset loading state after 3 seconds (or when response is received)
+        setTimeout(resetLoading, 3000);
+      }
+    });
+
+    // Tooltip initialization for better UX
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add tooltips to buttons
+      const tooltips = [
+        { element: previewBtn, text: 'Preview uploaded media' },
+        { element: document.querySelector('[data-bs-target="#scheduleModal"]'), text: 'Schedule post for later' },
+        { element: document.querySelector('button[onclick="setAction(\'post_now\')"]'), text: 'Post immediately to selected platforms' }
+      ];
+      
+      tooltips.forEach(({ element, text }) => {
+        if (element) {
+          element.setAttribute('title', text);
+          element.setAttribute('data-bs-toggle', 'tooltip');
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
