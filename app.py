@@ -46,7 +46,7 @@ logging.info("[☁️] Cloudinary configured.")
 X_CONSUMER_KEY = "wgFpPxuznODhBOscE7B71qbqB"
 X_CONSUMER_SECRET = "iMJIH5LTAjfKJkdYYQ2MhF0JkFUcIAmoOSdU8sXMLvO2ZNEger" # Corrected based on your provided value
 X_ACCESS_TOKEN = "1940284786201042946-sZKnnCHwfgSIKBtbax7ONYSa0xLI8h"
-X_ACCESS_TOKEN_SECRET = "nfvE9Ppl2BS0eiC1Uz8xMALLoZDJZtCRlq3EifyMl5AMr" # Corrected based on your provided value
+X_ACCESS_TOKEN_SECRET = "nfvE9Ppl2BS0eiC1Uz8xMALLoZDJZtCRLq3EifyMl5AMr" # Corrected based on your provided value
 logging.info("[🔑] X (Twitter) API credentials loaded in app.py.")
 
 # Configure logging for the Flask app
@@ -265,7 +265,7 @@ def execute_scheduled_post(post_id):
 def index():
     """Renders the main posting form page."""
     app_logger.info("[🌐] Serving index.html.")
-    return render_template('index1.html')
+    return render_template('index3.html')
 
 @app.route('/privacy-policy')
 def privacy_policy():
@@ -315,6 +315,44 @@ def scheduled_posts():
             conn.close()
     return render_template('scheduled_posts.html', posts=posts_list)
 
+@app.route('/api/scheduled-posts-data')
+def api_scheduled_posts_data():
+    """Provides a JSON API endpoint for scheduled post data."""
+    app_logger.info("[📊] API request for scheduled post data.") # Added log to confirm hit
+    conn = None
+    posts_list = []
+    try:
+        conn = sqlite3.connect('scheduled_posts.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT id, platforms, caption_general, scheduled_time, status, created_at, posted_at, error_message
+            FROM scheduled_posts
+            ORDER BY scheduled_time DESC
+        ''')
+        posts = cursor.fetchall()
+
+        for post in posts:
+            posts_list.append({
+                'id': post[0],
+                'platforms': json.loads(post[1]),
+                'caption': post[2][:100] + '...' if post[2] and len(post[2]) > 100 else post[2],
+                'scheduled_time': post[3],
+                'status': post[4],
+                'created_at': post[5],
+                'posted_at': post[6],
+                'error_message': post[7]
+            })
+        app_logger.info(f"[💾] Retrieved {len(posts_list)} scheduled posts from DB for API.")
+    except sqlite3.Error as e:
+        app_logger.error(f"[❌ DB] Error fetching API scheduled post data: {e}")
+        # Return an empty list and an error status if something goes wrong
+        return jsonify({'error': 'Error retrieving scheduled posts from database.', 'posts': []}), 500
+    finally:
+        if conn:
+            conn.close()
+    return jsonify({'posts': posts_list})
+
+
 @app.route('/delete-scheduled-post/<int:post_id>')
 def delete_scheduled_post(post_id):
     """Deletes a scheduled post and removes it from the scheduler."""
@@ -363,15 +401,17 @@ def post():
     location = request.form.get('location', '') # Not currently used in posting functions
     collaborators = request.form.get('collaborators', '') # Not currently used in posting functions
 
+    response_messages = [] # List to store messages for frontend
+
     if not media_files or media_files[0].filename == '':
-        flash('Please select at least one media file!')
+        response_messages.append({'platform': 'General', 'status': 'error', 'message': 'Please select at least one media file!'})
         app_logger.warning("[⚠️] No media files selected for post.")
-        return redirect(url_for('index'))
+        return jsonify({'success': False, 'messages': response_messages})
 
     if not platforms:
-        flash('Please select at least one platform!')
+        response_messages.append({'platform': 'General', 'status': 'error', 'message': 'Please select at least one platform!'})
         app_logger.warning("[⚠️] No platforms selected for post.")
-        return redirect(url_for('index'))
+        return jsonify({'success': False, 'messages': response_messages})
 
     local_paths = []
     cloudinary_urls = []
@@ -401,30 +441,30 @@ def post():
                     app_logger.info(f"[✅☁️] Uploaded to Cloudinary: {cloud_url}")
                 else:
                     app_logger.error(f"[❌☁️] Cloudinary upload failed for {filename}. Result: {json.dumps(result)}")
-                    flash(f'Failed to upload {filename} to Cloudinary. Check logs.')
+                    response_messages.append({'platform': 'Cloudinary', 'status': 'error', 'message': f'Failed to upload {filename} to Cloudinary.'})
             except Exception as e:
                 app_logger.exception(f"[❌] Error processing media file {filename}: {e}")
-                flash(f'Error processing {filename}. Please try again.')
+                response_messages.append({'platform': 'Media Upload', 'status': 'error', 'message': f'Error processing {filename}.'})
         else:
             app_logger.warning(f"[⚠️] Skipped invalid file: {media.filename}")
-            flash(f'File {media.filename} has an unsupported format and was skipped.')
+            response_messages.append({'platform': 'Media Upload', 'status': 'warning', 'message': f'File {media.filename} has an unsupported format and was skipped.'})
 
     if not local_paths: # If no valid files were processed
-        flash('No valid media files were uploaded. Please try again with supported formats.')
-        return redirect(url_for('index'))
+        response_messages.append({'platform': 'General', 'status': 'error', 'message': 'No valid media files were uploaded. Please try again with supported formats.'})
+        return jsonify({'success': False, 'messages': response_messages})
 
     if action == 'schedule':
         if not scheduled_time_str:
-            flash('Please select a date and time for scheduling!')
+            response_messages.append({'platform': 'Scheduling', 'status': 'error', 'message': 'Please select a date and time for scheduling!'})
             app_logger.warning("[⚠️] No scheduled time provided for a scheduled post.")
-            return redirect(url_for('index'))
+            return jsonify({'success': False, 'messages': response_messages})
         try:
             schedule_dt = datetime.fromisoformat(scheduled_time_str)
             # Ensure scheduled time is in the future
             if schedule_dt <= datetime.now():
-                flash('Please select a future date and time for scheduling!')
+                response_messages.append({'platform': 'Scheduling', 'status': 'error', 'message': 'Please select a future date and time for scheduling!'})
                 app_logger.warning(f"[⚠️] Attempted to schedule post in the past: {schedule_dt}")
-                return redirect(url_for('index'))
+                return jsonify({'success': False, 'messages': response_messages})
 
             conn = None
             try:
@@ -459,39 +499,41 @@ def post():
                     misfire_grace_time=300 # Allow job to run up to 5 minutes late if system is busy
                 )
                 app_logger.info(f"[✅⏰] Job 'post_{post_id}' scheduled for {schedule_dt}.")
-                flash(f'📅 Post scheduled successfully for {schedule_dt.strftime("%B %d, %Y at %I:%M %p")}!')
+                response_messages.append({'platform': 'Scheduling', 'status': 'success', 'message': f'Post scheduled successfully for {schedule_dt.strftime("%B %d, %Y at %I:%M %p")}!'})
+                return jsonify({'success': True, 'messages': response_messages})
             except sqlite3.Error as db_e:
                 app_logger.error(f"[❌ DB] Error saving scheduled post to database: {db_e}")
-                flash('Error saving post to database. Please try again.')
+                response_messages.append({'platform': 'Database', 'status': 'error', 'message': 'Error saving post to database. Please try again.'})
+                return jsonify({'success': False, 'messages': response_messages})
             except Exception as e:
                 app_logger.exception(f"[❌⏰] Error adding job to scheduler for post ID {post_id if 'post_id' in locals() else 'N/A'}: {e}")
-                flash('Error scheduling post. Please try again.')
+                response_messages.append({'platform': 'Scheduler', 'status': 'error', 'message': 'Error scheduling post. Please try again.'})
+                return jsonify({'success': False, 'messages': response_messages})
             finally:
                 if conn:
                     conn.close()
 
         except ValueError:
-            flash('Invalid date and time format for scheduling!')
+            response_messages.append({'platform': 'Scheduling', 'status': 'error', 'message': 'Invalid date and time format for scheduling!'})
             app_logger.error(f"[❌] Invalid datetime format received: {scheduled_time_str}")
-            return redirect(url_for('index'))
+            return jsonify({'success': False, 'messages': response_messages})
         except Exception as e:
             app_logger.exception(f"[❌] An unexpected error occurred during scheduling: {e}")
-            flash('An unexpected error occurred while scheduling. Please try again.')
-            return redirect(url_for('index'))
+            response_messages.append({'platform': 'Scheduling', 'status': 'error', 'message': 'An unexpected error occurred while scheduling. Please try again.'})
+            return jsonify({'success': False, 'messages': response_messages})
 
     else: # action == 'post_now'
         app_logger.info("[⚡] Executing immediate post.")
-        results_summary = []
-
+        
         # --- Facebook Immediate Post ---
         if 'facebook' in platforms:
             app_logger.info("[⚡📘] Attempting immediate post to Facebook...")
             fb_result = post_to_facebook(local_paths, caption_general)
             if isinstance(fb_result, dict) and 'id' in fb_result:
-                results_summary.append(f"Facebook: Success (Post ID: {fb_result.get('id')})")
+                response_messages.append({'platform': 'Facebook', 'status': 'success', 'message': f'Post successful (ID: {fb_result.get("id")})'})
                 app_logger.info(f"[✅⚡📘] Facebook immediate post successful: {json.dumps(fb_result)}")
             else:
-                results_summary.append(f"Facebook: Failed ({fb_result.get('error', 'Unknown error or unexpected response')})")
+                response_messages.append({'platform': 'Facebook', 'status': 'error', 'message': f'Post failed ({fb_result.get("error", "Unknown error or unexpected response")})'})
                 app_logger.error(f"[❌⚡📘] Facebook immediate post failed: {json.dumps(fb_result)}")
 
         # --- Instagram Immediate Post ---
@@ -500,53 +542,49 @@ def post():
             ig_results_list = post_to_instagram(cloudinary_urls, caption_general)
             
             instagram_success = False
-            instagram_messages = []
+            instagram_platform_messages = [] # Use a separate list for Instagram specific messages
             if isinstance(ig_results_list, list):
                 for res in ig_results_list:
                     if isinstance(res, dict) and 'id' in res:
                         instagram_success = True
-                        instagram_messages.append(f"Success (Media ID: {res.get('id')})")
+                        instagram_platform_messages.append(f"Media ID: {res.get('id')}")
                     elif isinstance(res, dict) and 'error' in res:
-                        instagram_messages.append(f"Failed ({res.get('error', 'Unknown error')})")
+                        instagram_platform_messages.append(f"Failed ({res.get('error', 'Unknown error')})")
                     else:
-                        instagram_messages.append(f"Unexpected response: {res}")
+                        instagram_platform_messages.append(f"Unexpected response: {res}")
             else:
-                instagram_messages.append(f"Unexpected Instagram response type: {type(ig_results_list)}")
+                instagram_platform_messages.append(f"Unexpected Instagram response type: {type(ig_results_list)}")
 
             if instagram_success:
-                results_summary.append(f"Instagram: {'; '.join(instagram_messages)}")
+                response_messages.append({'platform': 'Instagram', 'status': 'success', 'message': f'Post successful ({"; ".join(instagram_platform_messages)})'})
                 app_logger.info(f"[✅⚡📷] Instagram immediate post successful: {json.dumps(ig_results_list)}")
             else:
-                results_summary.append(f"Instagram: {'; '.join(instagram_messages)}")
+                response_messages.append({'platform': 'Instagram', 'status': 'error', 'message': f'Post failed ({"; ".join(instagram_platform_messages)})'})
                 app_logger.error(f"[❌⚡📷] Instagram immediate post failed: {json.dumps(ig_results_list)}")
 
-                # --- LinkedIn Immediate Post ---
+        # --- LinkedIn Immediate Post ---
         if 'linkedin' in platforms:
             app_logger.info("[⚡💼] Attempting immediate post to LinkedIn...")
             linkedin_result = post_to_linkedin(local_paths, caption_general, location, collaborators)
             if linkedin_result.get("success"):
-                results_summary.append(f"LinkedIn: Success (Type: {linkedin_result.get('post_type')})")
+                response_messages.append({'platform': 'LinkedIn', 'status': 'success', 'message': f'Post successful (Type: {linkedin_result.get("post_type")})'})
                 app_logger.info(f"[✅⚡💼] LinkedIn immediate post successful: {json.dumps(linkedin_result)}")
             else:
-                results_summary.append(f"LinkedIn: Failed ({linkedin_result.get('error', 'Unknown error')})")
+                response_messages.append({'platform': 'LinkedIn', 'status': 'error', 'message': f'Post failed ({linkedin_result.get("error", "Unknown error")})'})
                 app_logger.error(f"[❌⚡💼] LinkedIn immediate post failed: {json.dumps(linkedin_result)}")
-
 
         # --- X (Twitter) Immediate Post ---
         if 'x' in platforms:
             app_logger.info("[⚡🐦] Attempting immediate post to X (Twitter)...")
-            # ✅ FIXED: Call with correct args for tweepy-based x.py
             x_result = post_to_x(text=caption_twitter, media_paths=local_paths)
             if isinstance(x_result, dict) and x_result.get('success'):
-                results_summary.append(f"X (Twitter): Success (Tweet ID: {x_result.get('tweet_id')})")
+                response_messages.append({'platform': 'X (Twitter)', 'status': 'success', 'message': f'Post successful (Tweet ID: {x_result.get("tweet_id")})'})
                 app_logger.info(f"[✅⚡🐦] X (Twitter) immediate post successful: {json.dumps(x_result)}")
             else:
-                results_summary.append(f"X (Twitter): Failed ({x_result.get('error', 'Unknown error or unexpected response')})")
+                response_messages.append({'platform': 'X (Twitter)', 'status': 'error', 'message': f'Post failed ({x_result.get("error", "Unknown error or unexpected response")})'})
                 app_logger.error(f"[❌⚡🐦] X (Twitter) immediate post failed: {json.dumps(x_result)}")
 
-        flash(f'✅ Post attempted: {"; ".join(results_summary)}. Check logs for details.')
-
-    return redirect(url_for('index'))
+        return jsonify({'success': True, 'messages': response_messages}) # Always return success=True if the request was processed, individual platform success is in messages
 
 @app.route('/api/scheduled-posts')
 def api_scheduled_posts():
